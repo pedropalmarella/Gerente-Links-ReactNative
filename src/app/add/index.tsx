@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { styles } from "./styles";
+import { linkStorage } from "@/storage/link-storage";
 import { colors } from "@/styles/colors";
 import { Input } from "@/components/input";
 import { Button } from "@/components/button";
@@ -13,17 +14,30 @@ export default function Add() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
 
-  function handleAdd() {
-    if (!category) {
-      return Alert.alert("Categoria", "Selecione uma categoria para o link");
+  async function handleAdd() {
+    try {
+      if (!category) {
+        return Alert.alert("Categoria", "Selecione uma categoria para o link");
+      }
+      if (!name.trim()) {
+        return Alert.alert("Nome", "Informe um nome para o link");
+      }
+      if (!url.trim()) {
+        return Alert.alert("URL", "Informe a URL do link");
+      }
+
+      await linkStorage.save({
+        id: new Date().getTime().toString(),
+        name,
+        url,
+        category
+      })
+      const data = await linkStorage.get()
+
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível salvar o link")
+      console.log(error)
     }
-    if (!name.trim()) {
-      return Alert.alert("Nome", "Informe um nome para o link");
-    }
-    if (!url.trim()) {
-      return Alert.alert("URL", "Informe a URL do link");
-    }
-    console.log({category, name, url});
   }
 
   return (
@@ -40,8 +54,8 @@ export default function Add() {
       <Categories onChange={setCategory} selected={category}/>
 
       <View style={styles.form}>
-        <Input placeholder="Nome" onChangeText={setName} />
-        <Input placeholder="URL" onChangeText={setUrl} />
+        <Input placeholder="Nome" onChangeText={setName} autoCorrect={false}/>
+        <Input placeholder="URL" onChangeText={setUrl} autoCorrect={false} autoCapitalize="none"/>
         <Button title="Adicionar" onPress={handleAdd} />
       </View>
 
